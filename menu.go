@@ -27,7 +27,9 @@ const (
 	bgMenuHighlight = 0x53
 	fgStar          = termbox.ColorWhite
 	bgStar          = termbox.ColorBlack
-	starSymbol      = "*"
+	numStars        = 50
+	starSymbol      = "."
+	logoY           = 3
 	logo            = `_______________  ________________        ____              _______________  _______________
 I             I  I              I       /    \             I             I  I             I
 I             I  I    -------   I      /  /\  \            I             I  I             I
@@ -67,7 +69,6 @@ var (
 	logoLines      = strings.Split(logo, "\n")
 	logoLineLength = len(logoLines[0])
 	logoHeight     = len(logoLines)
-	numStars       = 100
 	stars          = make([]*Star, 0, numStars)
 )
 
@@ -80,7 +81,7 @@ func PrintLogo(x, y int, fg, bg termbox.Attribute, lines []string) {
 
 func (g *Game) DrawMenu() {
 	x := g.w/2 - logoLineLength/2
-	y := 3
+	y := logoY
 	PrintLogo(x, y, g.fg, g.bg, logoLines)
 
 	length := 0
@@ -111,10 +112,10 @@ func (g *Game) DrawMenu() {
 }
 
 func (g *Game) UpdateMenu() {
-	if len(stars) != cap(stars) {
+	if len(stars) != cap(stars) && g.fc%3 == 0 {
 		n := len(stars)
 		stars = stars[0 : n+1]
-		stars[n] = NewStar(rand.Intn(g.w), rand.Intn(g.h))
+		stars[n] = NewStar(g.w, rand.Intn(g.h))
 	}
 
 	for i, s := range stars {
@@ -122,7 +123,7 @@ func (g *Game) UpdateMenu() {
 		s.y += s.vy
 
 		if s.x < 0 || s.x > g.w || s.y < 0 || s.y > g.h {
-			stars[i] = NewStar(rand.Intn(g.w), rand.Intn(g.h))
+			stars[i] = NewStar(g.w, rand.Intn(g.h))
 		}
 	}
 }
@@ -130,17 +131,19 @@ func (g *Game) UpdateMenu() {
 func NewStar(x, y int) *Star {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	vx, vy := 0, 0
-	for vx == 0 || vy == 0 {
-		vx = rand.Intn(3) - 1
-		vy = rand.Intn(3) - 1
-	}
+	vx, vy := -1*(1+rand.Intn(3)), 0
+	/*
+	 *for vx == 0 || vy == 0 {
+	 *  vx = rand.Intn(3) - 1
+	 *  vy = rand.Intn(3) - 1
+	 *}
+	 */
 
 	return &Star{Point{x, y}, vx, vy}
 }
 
 func (g *Game) GoMenu() {
-	g.state = Menu
+	g.state = MenuState
 	g.fg = fgMenu
 	g.bg = bgMenu
 	g.hmi = FirstMenuItem
