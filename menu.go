@@ -21,10 +21,10 @@ type Star struct {
 
 const (
 	menuPad         = 10
-	fgMenu          = 0xc5
+	fgMenu          = red
 	bgMenu          = termbox.ColorBlack
 	fgMenuHighlight = termbox.ColorBlack
-	bgMenuHighlight = 0x53
+	bgMenuHighlight = neonGreen
 	fgStar          = termbox.ColorWhite
 	bgStar          = termbox.ColorBlack
 	numStars        = 50
@@ -82,7 +82,7 @@ func PrintLogo(x, y int, fg, bg termbox.Attribute, lines []string) {
 func (g *Game) DrawMenu() {
 	x := g.w/2 - logoLineLength/2
 	y := logoY
-	PrintLogo(x, y, g.fg, g.bg, logoLines)
+	PrintLogo(x, y, fgMenu, bgMenu, logoLines)
 
 	length := 0
 	i := 0
@@ -101,7 +101,7 @@ func (g *Game) DrawMenu() {
 		if i == g.hmi {
 			tbprint(x, y, fgMenuHighlight, bgMenuHighlight, v)
 		} else {
-			tbprint(x, y, g.fg, g.bg, v)
+			tbprint(x, y, fgMenu, bgMenu, v)
 		}
 		x += len(v) + menuPad
 	}
@@ -142,9 +142,26 @@ func NewStar(x, y int) *Star {
 	return &Star{Point{x, y}, vx, vy}
 }
 
+func (g *Game) HandleKeyMenu(k termbox.Key) {
+	switch k {
+	case termbox.KeyArrowLeft:
+		// because of Go's bad mod operator, have to add the length here
+		g.hmi = (g.hmi - 1 + NumMenuItems) % NumMenuItems
+	case termbox.KeyArrowRight:
+		g.hmi = (g.hmi + 1) % NumMenuItems
+	case termbox.KeyEnter:
+		switch g.hmi {
+		case Howto:
+			g.GoHowto()
+		case Play:
+			g.GoPlay()
+		}
+	}
+}
+
 func (g *Game) GoMenu() {
 	g.state = MenuState
-	g.fg = fgMenu
-	g.bg = bgMenu
+	g.cfg = fgMenu
+	g.cbg = bgMenu
 	g.hmi = FirstMenuItem
 }

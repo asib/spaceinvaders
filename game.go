@@ -37,9 +37,19 @@ func tbrect(x, y, w, h int, fg, bg termbox.Attribute, border bool) {
 	}
 }
 
+// print a multi-line sprite
+func tbprintsprite(x, y int, fg, bg termbox.Attribute, sprite string) {
+	lines := strings.Split(sprite, "\n")
+	for _, l := range lines {
+		tbprint(x, y, fg, bg, l)
+		y++
+	}
+}
+
 const (
 	fgDefault = termbox.ColorRed
 	bgDefault = termbox.ColorYellow
+	fps       = 30
 )
 
 // GameState is used as an enum
@@ -48,26 +58,31 @@ type GameState uint8
 const (
 	MenuState GameState = iota
 	HowtoState
+	PlayState
 )
 
 type Game struct {
 	state GameState
 	evq   chan termbox.Event
 	timer <-chan time.Time
+
 	// frame counter
 	fc uint8
+
 	// highlighted menu item
 	hmi int
 	w   int
 	h   int
-	fg  termbox.Attribute
-	bg  termbox.Attribute
+
+	// fg and bg colors used when termbox.Clear() is called
+	cfg termbox.Attribute
+	cbg termbox.Attribute
 }
 
 func NewGame() *Game {
 	return &Game{
 		evq:   make(chan termbox.Event),
-		timer: time.Tick(33 * time.Millisecond),
+		timer: time.Tick(time.Duration(1000/fps) * time.Millisecond),
 		fc:    1,
 	}
 }
@@ -76,7 +91,7 @@ func NewGame() *Game {
 func (g *Game) Tick() {
 	<-g.timer
 	g.fc++
-	if g.fc > 30 {
+	if g.fc > fps {
 		g.fc = 1
 	}
 }
@@ -92,40 +107,30 @@ func (g *Game) Listen() {
 func (g *Game) HandleKey(k termbox.Key) {
 	switch g.state {
 	case MenuState:
-		switch k {
-		case termbox.KeyArrowLeft:
-			// because of Go's bad mod operator, have to add the length here
-			g.hmi = (g.hmi - 1 + NumMenuItems) % NumMenuItems
-		case termbox.KeyArrowRight:
-			g.hmi = (g.hmi + 1) % NumMenuItems
-		case termbox.KeyEnter:
-			if g.hmi == Howto {
-				g.GoHowto()
-			}
-		}
+		g.HandleKeyMenu(k)
 	case HowtoState:
-		switch k {
-		case termbox.KeyEsc:
-			g.GoMenu()
-			g.hmi = Howto
-		}
+		g.HandleKeyHowto(k)
+	case PlayState:
+		g.HandleKeyPlay(k)
 	}
 }
 
 func (g *Game) FitScreen() {
-	termbox.Clear(g.fg, g.bg)
+	termbox.Clear(g.cfg, g.cbg)
 	g.w, g.h = termbox.Size()
 	g.Draw()
 }
 
 func (g *Game) Draw() {
-	termbox.Clear(g.fg, g.bg)
+	termbox.Clear(g.cfg, g.cbg)
 
 	switch g.state {
 	case MenuState:
 		g.DrawMenu()
 	case HowtoState:
 		g.DrawHowto()
+	case PlayState:
+		g.DrawPlay()
 	}
 
 	termbox.Flush()
@@ -139,6 +144,8 @@ func (g *Game) Update() {
 		g.UpdateMenu()
 	case HowtoState:
 		g.UpdateHowto()
+	case PlayState:
+		g.UpdatePlay()
 	}
 
 	return

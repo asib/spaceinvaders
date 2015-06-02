@@ -6,8 +6,23 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+type AttributedText struct {
+	fg termbox.Attribute
+	bg termbox.Attribute
+	s  string
+}
+
 const (
-	instructions = `  xx
+	fgHowto          = neonGreen
+	bgHowto          = termbox.ColorBlack
+	fgHowtoControl   = magenta
+	instructionsWPad = 20
+	instructionsHPad = 2
+)
+
+var (
+	instructions = []AttributedText{
+		AttributedText{fgHowto, bgHowto, `  xx
  xOOx
 xxxxxx     = 10 pts
  /\/\
@@ -27,23 +42,33 @@ xxoxOxoxx  = ?? pts
  ##   ##
 
 
-Left/Right Arrow
-to move.
+`},
+		AttributedText{fgHowtoControl, bgHowto, `Left`},
+		AttributedText{fgHowto, bgHowto, `/`},
+		AttributedText{fgHowtoControl, bgHowto, `Right`},
+		AttributedText{fgHowto, bgHowto, ` Arrow to move.
+
+`},
+		AttributedText{fgHowtoControl, bgHowto, `Space`},
+		AttributedText{fgHowto, bgHowto, ` to fire.
 
 
 Press ESC to close
-this window.`
-	fgHowto          = 0x53
-	bgHowto          = termbox.ColorBlack
-	instructionsWPad = 20
-	instructionsHPad = 2
+this window.`}}
+	instructionsLines  []string
+	instructionsWidth  int
+	instructionsHeight int
 )
 
-var (
-	instructionsLines  = strings.Split(instructions, "\n")
-	instructionsWidth  = len(instructionsLines[2])
+func init() {
+	str := ""
+	for _, v := range instructions {
+		str += v.s
+	}
+	instructionsLines = strings.Split(str, "\n")
+	instructionsWidth = len(instructionsLines[2])
 	instructionsHeight = len(instructionsLines)
-)
+}
 
 func (g *Game) DrawHowto() {
 	g.DrawMenu()
@@ -56,9 +81,18 @@ func (g *Game) DrawHowto() {
 	x += instructionsWPad / 2
 	y += instructionsHPad / 2
 
-	for _, l := range instructionsLines {
-		tbprint(x, y, fgHowto, bgHowto, l)
-		y++
+	leftMargin := x
+
+	for _, l := range instructions {
+		for _, c := range l.s {
+			if c != '\n' {
+				termbox.SetCell(x, y, c, l.fg, l.bg)
+				x++
+			} else {
+				y++
+				x = leftMargin
+			}
+		}
 	}
 }
 
@@ -66,6 +100,16 @@ func (g *Game) UpdateHowto() {
 	g.UpdateMenu()
 }
 
+func (g *Game) HandleKeyHowto(k termbox.Key) {
+	switch k {
+	case termbox.KeyEsc:
+		g.GoMenu()
+		g.hmi = Howto
+	}
+}
+
 func (g *Game) GoHowto() {
 	g.state = HowtoState
+	g.cfg = fgMenu
+	g.cbg = bgMenu
 }
