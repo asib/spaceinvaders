@@ -16,18 +16,38 @@ OXOOXO`
 	bgPlayer           = termbox.ColorBlack
 	livesSprite        = `⏣ `
 
-	smAlienSprite = `  xx
- xOOx
-xxxxxx
- /\/\`
-	medAlienSprite = `x    x
-xxOOxx
- xxxx
- /  \`
-	lgAlienSprite = `  xx
-xOxxOx
-xxxxxx
- /||\`
+	alienSpriteWidth  = 8
+	alienSpriteHeight = 4
+
+	ufoSpriteWidth  = 9
+	ufoSpriteHeight = 3
+)
+
+var (
+	smAlienSprite = [2]string{`   xx
+  xOOx
+ xxxxxx
+  /\/\`, `   xx
+  xOOx
+ xxxxxx
+  \  /`}
+
+	mdAlienSprite = [2]string{` x    x
+ xxOOxx
+  xxxx
+  /  \`, `
+ xxOOxx
+x xxxx x
+  /  \`}
+
+	lgAlienSprite = [2]string{`   xx
+ xOxxOx
+ xxxxxx
+  /||\`, `   xx
+ xOxxOx
+ xxxxxx
+  \||/`}
+
 	ufoSprite = `  xxxxx
 xxoxOxoxx
  ##   ##`
