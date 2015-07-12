@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ const (
 	initLives                = 5
 	playerMoveSpeed          = 2
 	playerBulletSpeed        = -1
+	playerSpriteHere         = 11
 
 	scoreText      = "Score: "
 	scorex, scorey = 10, 1
@@ -27,6 +29,9 @@ const (
 	livesText        = "Lives: "
 	livesRightOffset = 0
 
+	alienBulletSpeed    = 1
+	alienShootValMax    = 100
+	alienShootVal       = 1
 	alienPadVertical    = 1
 	alienPadHorizontal  = 3
 	maxAliensHorizontal = 11
@@ -100,6 +105,7 @@ var (
 
 	// +1 on the end because we can have 1 active UFO at any given time
 	aliens           = make([]*Alien, maxAliensHorizontal*numRows+1)
+	alienBullets     = make([]*Bullet, int(maxAliensHorizontal*numRows/10))
 	alienSpriteIndex = 0
 	alienMoveEvery   = uint8(15)
 	alienv           = rightMove
@@ -117,6 +123,12 @@ func (g *Game) DrawPlay() {
 
 	tbprintsprite(player.x, player.y, player.fg, player.bg, player.sprite)
 
+	for _, b := range alienBullets {
+		if b != nil {
+			tbprintsprite(b.x, b.y, b.fg, b.bg, b.sprite)
+		}
+	}
+
 	for _, a := range aliens {
 		if a != nil {
 			tbprintsprite(a.x, a.y, a.fg, a.bg, a.sprite[alienSpriteIndex])
@@ -127,6 +139,34 @@ func (g *Game) DrawPlay() {
 		tbprintsprite(player.bullet.x, player.bullet.y,
 			player.bullet.fg, player.bullet.bg, player.bullet.sprite)
 	}
+}
+
+func (g *Game) PlayerPositions() [][]int {
+	screen := make([][]int, g.w)
+	for i := range screen {
+		screen[i] = make([]int, g.h)
+		for j := range screen[i] {
+			screen[i][j] = nonIndex
+		}
+	}
+
+	x, y := player.x, player.y
+	initx := x
+	lines := strings.Split(player.sprite, "\n")
+	for _, l := range lines {
+		for _, c := range l {
+			if c != ' ' {
+				screen[x][y] = playerSpriteHere
+			}
+
+			x++
+		}
+
+		y++
+		x = initx
+	}
+
+	return screen
 }
 
 func (g *Game) AlienPositions() [][]int {
@@ -160,7 +200,33 @@ func (g *Game) AlienPositions() [][]int {
 	return screen
 }
 
+func (g *Game) WipeBullets() {
+	player.bullet = nil
+	alienBullets = make([]*Bullet, int(maxAliensHorizontal*numRows/10))
+}
+
 func (g *Game) UpdatePlay() {
+	playerPos := g.PlayerPositions()
+	for b := range alienBullets {
+		if alienBullets[b] != nil {
+			alienBullets[b].y += alienBulletSpeed
+
+			if alienBullets[b].y >= g.h {
+				alienBullets[b] = nil
+			} else {
+				x, y := alienBullets[b].x, alienBullets[b].y
+				if playerPos[x][y] != nonIndex {
+					player.lives -= 1
+					g.WipeBullets()
+					// TODO: clear the UFO if it's there
+					// g.ClearUFO()
+					g.FreezeFlash()
+					return
+				}
+			}
+		}
+	}
+
 	if player.bullet != nil {
 		player.bullet.y += player.bullet.vy
 		if player.bullet.y < 0 {
@@ -176,6 +242,8 @@ func (g *Game) UpdatePlay() {
 		}
 	}
 
+	rand.Seed(time.Now().UnixNano())
+
 	if g.fc%alienMoveEvery == 0 {
 		alienSpriteIndex = (alienSpriteIndex + 1) % 2
 
@@ -189,6 +257,17 @@ func (g *Game) UpdatePlay() {
 				if aliens[i].x <= 0 || aliens[i].x+alienSpriteWidth >= g.w {
 					downFlag = true
 					xval = aliens[i].x
+				}
+
+				// try firing
+				if rand.Intn(alienShootValMax) == 6 {
+					for i := range alienBullets {
+						if alienBullets[i] == nil {
+							alienBullets[i] = NewBullet(aliens[i].x+alienSpriteWidth/2,
+								aliens[i].y, alienBulletSpeed)
+							break
+						}
+					}
 				}
 			}
 		}
@@ -244,7 +323,7 @@ func makeAliens(x, y, rows, cols, spriteW, spriteH, reward, arrayOffset int,
 	return y, arrayOffset + rows*cols
 }
 
-func (g *Game) BeginNextLevel() {
+func (g *Game) FreezeFlash() {
 	g.Draw()
 
 	flash := fmt.Sprintf("Level %d", lvl)
@@ -252,6 +331,10 @@ func (g *Game) BeginNextLevel() {
 	termbox.Flush()
 
 	time.Sleep(flashDuration)
+}
+
+func (g *Game) BeginNextLevel() {
+	g.FreezeFlash()
 
 	x, y, offset := alienStartx, alienStarty, 0
 	y, offset = makeAliens(x, y, rowsLg, maxAliensHorizontal,
