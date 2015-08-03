@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -157,6 +158,12 @@ func main() {
 	}
 	termbox.SetOutputMode(termbox.Output256)
 	defer termbox.Close()
+
+	f, err := os.Create("gm.log")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.SetOutput(f)
 
 	g := NewGame()
 	g.Listen()

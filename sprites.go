@@ -21,6 +21,18 @@ OXOOXO`
 
 	ufoSpriteWidth  = 9
 	ufoSpriteHeight = 3
+	fgUfo           = magenta
+	bgUfo           = termbox.ColorBlack
+
+	fgBarricade           = white
+	bgBarricade           = termbox.ColorBlack
+	barricadeSpriteWidth  = 11
+	barricadeSpriteHeight = 5
+	barricadeSprite       = `    xxx
+  xxxxxxx
+xxxxxxxxxxx
+xxx     xxx
+xxx     xxx`
 )
 
 var (
