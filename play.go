@@ -200,7 +200,7 @@ func (g *Game) AlienPositions() [][]int {
 		}
 	}
 
-	if ufo != nil {
+	if ufo != nil && ufo.x > 0 && ufo.x < g.w-ufoSpriteWidth {
 		x, y := ufo.x, ufo.y
 		initx := x
 		lines := strings.Split(ufo.sprite, "\n")
@@ -397,7 +397,7 @@ func (g *Game) UpdatePlay() {
 			}
 		}
 
-		if levelComplete {
+		if levelComplete && ufo == nil {
 			lvl += 1
 			g.BeginNextLevel()
 			g.WipeBullets()
