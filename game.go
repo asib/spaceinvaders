@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,9 +50,10 @@ func tbprintsprite(x, y int, fg, bg termbox.Attribute, sprite string) {
 }
 
 const (
-	fgDefault = termbox.ColorRed
-	bgDefault = termbox.ColorYellow
-	fps       = 30
+	highscoreFilename = "hs"
+	fgDefault         = termbox.ColorRed
+	bgDefault         = termbox.ColorYellow
+	fps               = 30
 )
 
 // GameState is used as an enum
@@ -63,6 +66,8 @@ const (
 )
 
 type Game struct {
+	highscores map[string]int
+
 	state GameState
 	evq   chan termbox.Event
 	timer <-chan time.Time
@@ -82,9 +87,10 @@ type Game struct {
 
 func NewGame() *Game {
 	return &Game{
-		evq:   make(chan termbox.Event),
-		timer: time.Tick(time.Duration(1000/fps) * time.Millisecond),
-		fc:    1,
+		highscores: make(map[string]int),
+		evq:        make(chan termbox.Event),
+		timer:      time.Tick(time.Duration(1000/fps) * time.Millisecond),
+		fc:         1,
 	}
 }
 
@@ -152,6 +158,22 @@ func (g *Game) Update() {
 	return
 }
 
+func (g *Game) loadHighscores() {
+	data, err := ioutil.ReadFile(highscoreFilename)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	lines := strings.Split(string(data), "\n")
+	for _, l := range lines {
+		parts := strings.Split(l, ":")
+		if i, err := strconv.Atoi(parts[1]); err == nil {
+			g.highscores[parts[0]] = i
+		} else {
+			log.Fatalln(err)
+		}
+	}
+}
+
 func main() {
 	if err := termbox.Init(); err != nil {
 		log.Fatalln(err)
@@ -159,13 +181,18 @@ func main() {
 	termbox.SetOutputMode(termbox.Output256)
 	defer termbox.Close()
 
-	f, err := os.Create("gm.log")
+	f, err := os.Create("diwe.log")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.SetOutput(f)
 
 	g := NewGame()
+
+	if _, err := os.Stat(highscoreFilename); err == nil {
+		g.loadHighscores()
+	}
+
 	g.Listen()
 	g.GoMenu()
 	g.FitScreen()
