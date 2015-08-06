@@ -24,7 +24,7 @@ OXOOXO`
 	fgUfo           = magenta
 	bgUfo           = termbox.ColorBlack
 
-	fgBarricade           = white
+	fgBarricade           = neonGreen
 	bgBarricade           = termbox.ColorBlack
 	barricadeSpriteWidth  = 11
 	barricadeSpriteHeight = 5

@@ -33,15 +33,11 @@ const (
 	ufoIndex     = 666
 	ufoReward    = 100
 
-	alienBulletSpeed    = 1
-	alienShootValMax    = 100
-	alienShootVal       = 1
-	alienPadVertical    = 1
-	alienPadHorizontal  = 3
-	maxAliensHorizontal = 11
-	rowsSm              = 2
-	rowsMd              = 2
-	rowsLg              = 1
+	alienBulletSpeed   = 1
+	alienShootValMax   = 100
+	alienShootVal      = 1
+	alienPadVertical   = 1
+	alienPadHorizontal = 3
 
 	// rwd is reward
 	rwdSm  = 10
@@ -49,7 +45,7 @@ const (
 	rwdLg  = 30
 	rwdUfo = 100
 
-	alienStartx, alienStarty = 10, 8
+	alienStartx, alienStarty = 10, 7
 
 	numBarricades = 4
 
@@ -117,6 +113,10 @@ var (
 	alienSpriteIndex int
 	alienMoveEvery   uint8
 	alienv           [2]int
+	rowsSm           = 2
+	rowsMd           = 2
+	rowsLg           = 1
+	aliensHorizontal = 1
 
 	barricadePositions [][]int
 
@@ -124,13 +124,6 @@ var (
 )
 
 func (g *Game) DrawPlay() {
-	tbprint(scorex, scorey, fgPlayText, bgPlayText, scoreText+fmt.Sprintf("%d", player.score))
-
-	livesStr := livesText + strings.Replace(strings.Repeat(livesSprite, player.lives), "⏣ ", "⏣  ", -1)
-	livesx = g.w - livesRightOffset - len(livesStr)
-	livesy = scorey
-	tbprint(livesx, livesy, fgPlayText, bgPlayText, livesStr)
-
 	tbprintsprite(player.x, player.y, player.fg, player.bg, player.sprite)
 
 	for i := range barricadePositions {
@@ -161,6 +154,13 @@ func (g *Game) DrawPlay() {
 		tbprintsprite(player.bullet.x, player.bullet.y,
 			player.bullet.fg, player.bullet.bg, player.bullet.sprite)
 	}
+
+	tbprint(scorex, scorey, fgPlayText, bgPlayText, scoreText+fmt.Sprintf("%d", player.score))
+
+	livesStr := livesText + strings.Replace(strings.Repeat(livesSprite, player.lives), "⏣ ", "⏣  ", -1)
+	livesx = g.w - livesRightOffset - len(livesStr)
+	livesy = scorey
+	tbprint(livesx, livesy, fgPlayText, bgPlayText, livesStr)
 }
 
 func (g *Game) PlayerPositions() [][]int {
@@ -240,7 +240,11 @@ func (g *Game) AlienPositions() [][]int {
 
 func (g *Game) WipeBullets() {
 	player.bullet = nil
-	alienBullets = make([]*Bullet, int(maxAliensHorizontal*numRows/10))
+	alienBullets = make([]*Bullet, int(aliensHorizontal*numRows/10))
+}
+
+func (g *Game) barricadeYPos() int {
+	return (g.h - playerSpriteBottomOffset - playerSpriteHeight) - barricadeSpriteHeight - 2
 }
 
 func (g *Game) genBarricades() [][]int {
@@ -253,7 +257,7 @@ func (g *Game) genBarricades() [][]int {
 	}
 
 	gap := (g.w - 4*barricadeSpriteWidth) / 5
-	x, y := gap, (g.h-playerSpriteBottomOffset-playerSpriteHeight)-barricadeSpriteHeight-2
+	x, y := gap, g.barricadeYPos()
 	inity := y
 	lines := strings.Split(barricadeSprite, "\n")
 	for i := 0; i < numBarricades; i++ {
@@ -276,9 +280,32 @@ func (g *Game) genBarricades() [][]int {
 }
 
 func (g *Game) wipePlay() {
+	// calculate rows/cols
+	i := 0
+	for x := 0; x < (g.w / 2); x, i = x+(alienSpriteWidth+alienPadHorizontal), i+1 {
+		aliensHorizontal = i
+	}
+	i = 0
+	for y := alienStarty; y < (g.barricadeYPos() - alienSpriteHeight - alienPadVertical); y, i = y+(alienSpriteHeight+alienPadVertical), i+1 {
+		if i == 5 {
+			break
+		}
+	}
+	switch {
+	case i <= 3:
+		rowsSm = 1
+		rowsMd = 1
+	case i == 4:
+		rowsSm = 2
+		rowsMd = 1
+	default:
+		rowsSm = 2
+		rowsMd = 2
+	}
+
 	player = nil
-	aliens = make([]*Alien, maxAliensHorizontal*numRows)
-	alienBullets = make([]*Bullet, int(maxAliensHorizontal*numRows/10))
+	aliens = make([]*Alien, aliensHorizontal*numRows)
+	alienBullets = make([]*Bullet, int(aliensHorizontal*numRows/10))
 	alienSpriteIndex = 0
 	alienMoveEvery = uint8(15)
 	alienv = rightMove
@@ -454,7 +481,7 @@ func makeAliens(x, y, rows, cols, spriteW, spriteH, reward, arrayOffset int,
 	// create aliens
 	for i := 0; i < rows; i++ {
 		for j := 0; j < cols; j++ {
-			aliens[arrayOffset+i*maxAliensHorizontal+j] = NewAlien(x, y, fg, bg, sprite, reward)
+			aliens[arrayOffset+i*aliensHorizontal+j] = NewAlien(x, y, fg, bg, sprite, reward)
 			x += spriteW + alienPadHorizontal
 		}
 		x = startx
@@ -481,13 +508,13 @@ func (g *Game) BeginNextLevel() {
 	g.FreezeFlash(lvlFlash())
 
 	x, y, offset := alienStartx, alienStarty, 0
-	y, offset = makeAliens(x, y, rowsLg, maxAliensHorizontal,
+	y, offset = makeAliens(x, y, rowsLg, aliensHorizontal,
 		alienSpriteWidth, alienSpriteHeight, rwdLg,
 		offset, fgAlien, bgAlien, lgAlienSprite)
-	y, offset = makeAliens(x, y, rowsMd, maxAliensHorizontal,
+	y, offset = makeAliens(x, y, rowsMd, aliensHorizontal,
 		alienSpriteWidth, alienSpriteHeight, rwdMd,
 		offset, fgAlien, bgAlien, mdAlienSprite)
-	makeAliens(x, y, rowsSm, maxAliensHorizontal,
+	makeAliens(x, y, rowsSm, aliensHorizontal,
 		alienSpriteWidth, alienSpriteHeight, rwdSm,
 		offset, fgAlien, bgAlien, smAlienSprite)
 }
