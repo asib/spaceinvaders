@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"strings"
 	"time"
 
@@ -315,8 +316,49 @@ func (g *Game) wipePlay() {
 	lvl = 1
 }
 
+func (g *Game) getName() string {
+	name := ""
+	showLenWarn := false
+	for {
+		if len(name) >= 10 {
+			showLenWarn = true
+		}
+
+		select {
+		case ev := <-g.evq:
+			switch ev.Type {
+			case termbox.EventKey:
+				switch ev.Key {
+				case termbox.KeyEnter:
+					if len(name) < 3 {
+						showLenWarn = true
+					} else {
+						return name
+					}
+				case 0:
+					name += string(ev.Ch)
+				}
+			default:
+			}
+		default:
+		}
+	}
+}
+
+func (g *Game) checkHighscores() {
+	if player.score > g.highscores[len(g.highscores)-1].score || len(g.highscores) < maxHighscores {
+		name := g.getName()
+		g.highscores = append(g.highscores, &Highscore{player.score, name})
+		sort.Sort(ByScore(g.highscores))
+		if len(g.highscores) > maxHighscores {
+			g.highscores = append([]*Highscore(nil), g.highscores[:maxHighscores]...)
+		}
+	}
+}
+
 func (g *Game) gameOver() {
 	g.FreezeFlash("GAME OVER")
+	g.checkHighscores()
 	g.wipePlay()
 	g.GoMenu()
 	// TODO: finish this function, need to add highscore stuff
@@ -426,6 +468,9 @@ func (g *Game) UpdatePlay() {
 
 		if levelComplete && ufo == nil {
 			lvl += 1
+			if alienMoveEvery != 2 {
+				alienMoveEvery--
+			}
 			g.BeginNextLevel()
 			g.WipeBullets()
 		}

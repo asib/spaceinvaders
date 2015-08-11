@@ -5,12 +5,24 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/nsf/termbox-go"
 )
+
+type Highscore struct {
+	score int
+	name  string
+}
+
+type ByScore []*Highscore
+
+func (a ByScore) Len() int           { return len(a) }
+func (a ByScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByScore) Less(i, j int) bool { return a[i].score < a[j].score }
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
 	for _, c := range msg {
@@ -51,6 +63,7 @@ func tbprintsprite(x, y int, fg, bg termbox.Attribute, sprite string) {
 
 const (
 	highscoreFilename = "hs"
+	maxHighscores     = 5
 	fgDefault         = termbox.ColorRed
 	bgDefault         = termbox.ColorYellow
 	fps               = 30
@@ -66,7 +79,7 @@ const (
 )
 
 type Game struct {
-	highscores map[string]int
+	highscores []*Highscore
 
 	state GameState
 	evq   chan termbox.Event
@@ -87,7 +100,7 @@ type Game struct {
 
 func NewGame() *Game {
 	return &Game{
-		highscores: make(map[string]int),
+		highscores: make([]*Highscore, 0),
 		evq:        make(chan termbox.Event),
 		timer:      time.Tick(time.Duration(1000/fps) * time.Millisecond),
 		fc:         1,
@@ -167,11 +180,13 @@ func (g *Game) loadHighscores() {
 	for _, l := range lines {
 		parts := strings.Split(l, ":")
 		if i, err := strconv.Atoi(parts[1]); err == nil {
-			g.highscores[parts[0]] = i
+			g.highscores = append(g.highscores, &Highscore{i, parts[0]})
 		} else {
 			log.Fatalln(err)
 		}
 	}
+
+	sort.Sort(ByScore(g.highscores))
 }
 
 func main() {
