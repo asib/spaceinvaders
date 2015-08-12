@@ -19,7 +19,7 @@ const (
 	bgAlien    = termbox.ColorBlack
 
 	playerSpriteBottomOffset = 2
-	initLives                = 5
+	initLives                = 1
 	playerMoveSpeed          = 2
 	playerBulletSpeed        = -1
 	playerSpriteHere         = 11
@@ -316,10 +316,50 @@ func (g *Game) wipePlay() {
 	lvl = 1
 }
 
+func (g *Game) drawGetName(name string, showLenWarn bool) {
+	const (
+		prompt          = "Please enter a name 3-10 characters long:"
+		lenWarn         = "Name must be 3-10 characters long!"
+		getNameHeight   = 5
+		getNameWidthPad = 4
+		fgGetName       = white
+		bgGetName       = termbox.ColorBlack
+		fgGetNameName   = neonGreen
+	)
+	g.DrawPlay()
+	if len(name) < 10 {
+		name += "_"
+	}
+	w, h := len(prompt)+getNameWidthPad, getNameHeight
+	x, y := g.w/2-w/2, g.h/2-h/2
+	tbrect(x, y, w, h, fgGetName, bgGetName, true)
+
+	// prompt
+	x += getNameWidthPad / 2
+	indentX := x
+	y += 2
+	tbprint(x, y, fgGetName, bgGetName, prompt)
+
+	// name
+	x = g.w/2 - len(name)/2
+	y++
+	tbprint(x, y, fgGetNameName, bgGetName, name)
+
+	// showLenWarn ?
+	if showLenWarn {
+		x = indentX
+		y++
+		tbprint(x, y, fgGetName, bgGetName, lenWarn)
+	}
+
+	termbox.Flush()
+}
+
 func (g *Game) getName() string {
 	name := ""
 	showLenWarn := false
 	for {
+		g.drawGetName(name, showLenWarn)
 		if len(name) >= 10 {
 			showLenWarn = true
 		}
@@ -336,7 +376,14 @@ func (g *Game) getName() string {
 						return name
 					}
 				case 0:
-					name += string(ev.Ch)
+					if len(name) < 10 {
+						name += string(ev.Ch)
+					}
+				case termbox.KeyBackspace:
+					if len(name) > 0 {
+						name = name[:len(name)]
+						showLenWarn = true
+					}
 				}
 			default:
 			}
@@ -346,7 +393,7 @@ func (g *Game) getName() string {
 }
 
 func (g *Game) checkHighscores() {
-	if player.score > g.highscores[len(g.highscores)-1].score || len(g.highscores) < maxHighscores {
+	if len(g.highscores) < maxHighscores || player.score > g.highscores[len(g.highscores)-1].score {
 		name := g.getName()
 		g.highscores = append(g.highscores, &Highscore{player.score, name})
 		sort.Sort(ByScore(g.highscores))
