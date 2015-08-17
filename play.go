@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"sort"
 	"strings"
@@ -318,37 +319,43 @@ func (g *Game) wipePlay() {
 
 func (g *Game) drawGetName(name string, showLenWarn bool) {
 	const (
-		prompt          = "Please enter a name 3-10 characters long:"
-		lenWarn         = "Name must be 3-10 characters long!"
-		getNameHeight   = 5
-		getNameWidthPad = 4
-		fgGetName       = white
-		bgGetName       = termbox.ColorBlack
-		fgGetNameName   = neonGreen
+		msg                  = "You set a new highscore!"
+		prompt               = "Please enter a name 3-10 characters long:"
+		lenWarn              = "Name must be 3-10 characters long!"
+		getNameHeight        = 8
+		getNameHeightLenWarn = 11
+		getNameWidthPad      = 4
+		fgGetName            = white
+		bgGetName            = termbox.ColorBlack
+		fgGetNameName        = neonGreen
 	)
 	g.DrawPlay()
 	if len(name) < 10 {
 		name += "_"
 	}
 	w, h := len(prompt)+getNameWidthPad, getNameHeight
+	if showLenWarn {
+		h = getNameHeightLenWarn
+	}
 	x, y := g.w/2-w/2, g.h/2-h/2
 	tbrect(x, y, w, h, fgGetName, bgGetName, true)
 
 	// prompt
-	x += getNameWidthPad / 2
-	indentX := x
+	x += getNameWidthPad/2 + 1
+	y += 2
+	tbprint(x, y, fgGetName, bgGetName, msg)
 	y += 2
 	tbprint(x, y, fgGetName, bgGetName, prompt)
 
 	// name
 	x = g.w/2 - len(name)/2
-	y++
+	y += 2
 	tbprint(x, y, fgGetNameName, bgGetName, name)
 
 	// showLenWarn ?
 	if showLenWarn {
-		x = indentX
-		y++
+		x = g.w/2 - len(lenWarn)/2
+		y += 3
 		tbprint(x, y, fgGetName, bgGetName, lenWarn)
 	}
 
@@ -380,9 +387,10 @@ func (g *Game) getName() string {
 						name += string(ev.Ch)
 					}
 				case termbox.KeyBackspace:
+					fallthrough
+				case termbox.KeyBackspace2:
 					if len(name) > 0 {
-						name = name[:len(name)]
-						showLenWarn = true
+						name = name[:len(name)-1]
 					}
 				}
 			default:
@@ -400,6 +408,16 @@ func (g *Game) checkHighscores() {
 		if len(g.highscores) > maxHighscores {
 			g.highscores = append([]*Highscore(nil), g.highscores[:maxHighscores]...)
 		}
+
+		// write highscores
+		data := ""
+		for i, score := range g.highscores {
+			data += fmt.Sprintf("%s%s%d", score.name, highscoreSeparator, score.score)
+			if i != len(g.highscores)-1 {
+				data += "\n"
+			}
+		}
+		ioutil.WriteFile(highscoreFilename, []byte(data), 0666)
 	}
 }
 

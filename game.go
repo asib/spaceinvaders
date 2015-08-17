@@ -62,11 +62,12 @@ func tbprintsprite(x, y int, fg, bg termbox.Attribute, sprite string) {
 }
 
 const (
-	highscoreFilename = "hs"
-	maxHighscores     = 5
-	fgDefault         = termbox.ColorRed
-	bgDefault         = termbox.ColorYellow
-	fps               = 30
+	highscoreFilename  = "hs"
+	highscoreSeparator = ":"
+	maxHighscores      = 5
+	fgDefault          = termbox.ColorRed
+	bgDefault          = termbox.ColorYellow
+	fps                = 30
 )
 
 // GameState is used as an enum
@@ -178,7 +179,7 @@ func (g *Game) loadHighscores() {
 	}
 	lines := strings.Split(string(data), "\n")
 	for _, l := range lines {
-		parts := strings.Split(l, ":")
+		parts := strings.Split(l, highscoreSeparator)
 		if i, err := strconv.Atoi(parts[1]); err == nil {
 			g.highscores = append(g.highscores, &Highscore{i, parts[0]})
 		} else {
