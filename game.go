@@ -77,6 +77,7 @@ const (
 	MenuState GameState = iota
 	HowtoState
 	PlayState
+	HighscoresState
 )
 
 type Game struct {
@@ -133,6 +134,8 @@ func (g *Game) HandleKey(k termbox.Key) {
 		g.HandleKeyHowto(k)
 	case PlayState:
 		g.HandleKeyPlay(k)
+	case HighscoresState:
+		g.HandleKeyHighscores(k)
 	}
 }
 
@@ -152,6 +155,8 @@ func (g *Game) Draw() {
 		g.DrawHowto()
 	case PlayState:
 		g.DrawPlay()
+	case HighscoresState:
+		g.DrawHighscores()
 	}
 
 	termbox.Flush()
@@ -167,6 +172,8 @@ func (g *Game) Update() {
 		g.UpdateHowto()
 	case PlayState:
 		g.UpdatePlay()
+	case HighscoresState:
+		g.UpdateHighscores()
 	}
 
 	return
@@ -187,7 +194,7 @@ func (g *Game) loadHighscores() {
 		}
 	}
 
-	sort.Sort(ByScore(g.highscores))
+	sort.Sort(sort.Reverse(ByScore(g.highscores)))
 }
 
 func main() {

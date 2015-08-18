@@ -20,7 +20,7 @@ const (
 	bgAlien    = termbox.ColorBlack
 
 	playerSpriteBottomOffset = 2
-	initLives                = 1
+	initLives                = 5
 	playerMoveSpeed          = 2
 	playerBulletSpeed        = -1
 	playerSpriteHere         = 11
@@ -404,7 +404,7 @@ func (g *Game) checkHighscores() {
 	if len(g.highscores) < maxHighscores || player.score > g.highscores[len(g.highscores)-1].score {
 		name := g.getName()
 		g.highscores = append(g.highscores, &Highscore{player.score, name})
-		sort.Sort(ByScore(g.highscores))
+		sort.Sort(sort.Reverse(ByScore(g.highscores)))
 		if len(g.highscores) > maxHighscores {
 			g.highscores = append([]*Highscore(nil), g.highscores[:maxHighscores]...)
 		}
@@ -482,6 +482,8 @@ func (g *Game) UpdatePlay() {
 					player.score += aliens[screen[x][y]].reward
 					aliens[screen[x][y]] = nil
 				}
+			} else if barricadePositions[x][y] != nonIndex {
+				player.bullet = nil
 			}
 		}
 	}

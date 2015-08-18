@@ -130,15 +130,7 @@ func (g *Game) UpdateMenu() {
 
 func NewStar(x, y int) *Star {
 	rand.Seed(time.Now().UTC().UnixNano())
-
 	vx, vy := -1*(1+rand.Intn(3)), 0
-	/*
-	 *for vx == 0 || vy == 0 {
-	 *  vx = rand.Intn(3) - 1
-	 *  vy = rand.Intn(3) - 1
-	 *}
-	 */
-
 	return &Star{Point{x, y}, vx, vy}
 }
 
@@ -151,6 +143,8 @@ func (g *Game) HandleKeyMenu(k termbox.Key) {
 		g.hmi = (g.hmi + 1) % NumMenuItems
 	case termbox.KeyEnter:
 		switch g.hmi {
+		case Highscores:
+			g.GoHighscores()
 		case Howto:
 			g.GoHowto()
 		case Play:

@@ -15,6 +15,8 @@ type AttributedText struct {
 const (
 	fgHowto          = neonGreen
 	bgHowto          = termbox.ColorBlack
+	fgHowtoUfo       = magenta
+	bgHowtoUfo       = termbox.ColorBlack
 	fgHowtoControl   = magenta
 	instructionsWPad = 20
 	instructionsHPad = 2
@@ -36,9 +38,12 @@ xxOOxx
 xOxxOx
 xxxxxx     = 30 pts
  /||\
-
+`},
+		AttributedText{fgHowtoUfo, bgHowtoUfo, `
   xxxxx
-xxoxOxoxx  = ?? pts
+xxoxOxoxx`},
+		AttributedText{fgHowto, bgHowto, `  = ?? pts`},
+		AttributedText{fgHowtoUfo, bgHowtoUfo, `
  ##   ##
 
 
@@ -53,7 +58,9 @@ xxoxOxoxx  = ?? pts
 		AttributedText{fgHowto, bgHowto, ` to fire.
 
 
-Press ESC to close
+Press `},
+		AttributedText{fgHowtoControl, bgHowto, `ESC`},
+		AttributedText{fgHowto, bgHowto, ` to close
 this window.`}}
 	instructionsLines  []string
 	instructionsWidth  int
