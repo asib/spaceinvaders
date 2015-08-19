@@ -11,7 +11,7 @@ cd $GOPATH/src/github.com/asib/spaceinvaders
 go build
 ```
 
-You can also simply download a binary for your OS/Arch from [here](https://github.com/asib/spaceinvaders/releases/tag/v1.0).
+You can also simply download a binary for your OS/Arch from [here](https://github.com/asib/spaceinvaders/releases).
 
 #### Controls
 
