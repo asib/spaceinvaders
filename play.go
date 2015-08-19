@@ -484,6 +484,7 @@ func (g *Game) UpdatePlay() {
 				}
 			} else if barricadePositions[x][y] != nonIndex {
 				player.bullet = nil
+				barricadePositions[x][y] = nonIndex
 			}
 		}
 	}

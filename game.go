@@ -78,6 +78,7 @@ const (
 	HowtoState
 	PlayState
 	HighscoresState
+	WarnState
 )
 
 type Game struct {
@@ -157,6 +158,8 @@ func (g *Game) Draw() {
 		g.DrawPlay()
 	case HighscoresState:
 		g.DrawHighscores()
+	case WarnState:
+		g.DrawWarn()
 	}
 
 	termbox.Flush()
@@ -197,6 +200,13 @@ func (g *Game) loadHighscores() {
 	sort.Sort(sort.Reverse(ByScore(g.highscores)))
 }
 
+func (g *Game) checkSize() bool {
+	if g.w < logoLineLength+8 || g.h < (logoY+logoHeight+5+2) {
+		return false
+	}
+	return true
+}
+
 func main() {
 	if err := termbox.Init(); err != nil {
 		log.Fatalln(err)
@@ -217,7 +227,12 @@ func main() {
 	}
 
 	g.Listen()
-	g.GoMenu()
+	g.FitScreen()
+	if g.checkSize() {
+		g.GoMenu()
+	} else {
+		g.GoWarn()
+	}
 	g.FitScreen()
 
 main:
