@@ -8,6 +8,8 @@ cd $GOPATH/src/github.com/asib/spaceinvaders
 go build
 ```
 
+You can also simply download a binary for your OS/Arch from [here](https://github.com/asib/spaceinvaders/releases/tag/v1.0).
+
 #### Controls
 
 * Use the arrow keys to move left/right, spacebar to fire.
