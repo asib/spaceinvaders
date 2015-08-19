@@ -1,6 +1,9 @@
 # Space Invaders
 Terminal Space Invaders game written in Go.
 
+![Screenshot 1](screen_1.png)
+![Screenshot 2](screen_2.png)
+
 #### Installation
 ```sh
 go get -u github.com/asib/spaceinvaders
