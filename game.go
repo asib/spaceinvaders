@@ -137,6 +137,8 @@ func (g *Game) HandleKey(k termbox.Key) {
 		g.HandleKeyPlay(k)
 	case HighscoresState:
 		g.HandleKeyHighscores(k)
+	case WarnState:
+		g.HandleKeyWarn(k)
 	}
 }
 
