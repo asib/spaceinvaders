@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nsf/termbox-go"
+	"github.com/simulatedsimian/joystick"
 )
 
 type Highscore struct {
@@ -87,6 +88,8 @@ type Game struct {
 	state GameState
 	evq   chan termbox.Event
 	timer <-chan time.Time
+
+	js joystick.Joystick
 
 	// frame counter
 	fc uint8
@@ -167,6 +170,23 @@ func (g *Game) Draw() {
 	termbox.Flush()
 }
 
+func (g *Game) ReadJoystick() {
+	if g.js != nil {
+		jstate, err := g.js.Read()
+		if err == nil {
+			if jstate.Buttons&1 != 0 {
+				g.HandleKey(termbox.KeySpace)
+			}
+			if jstate.AxisData[0] < -10000 {
+				g.HandleKey(termbox.KeyArrowLeft)
+			}
+			if jstate.AxisData[0] > 10000 {
+				g.HandleKey(termbox.KeyArrowRight)
+			}
+		}
+	}
+}
+
 func (g *Game) Update() {
 	g.Tick()
 
@@ -176,6 +196,7 @@ func (g *Game) Update() {
 	case HowtoState:
 		g.UpdateHowto()
 	case PlayState:
+		g.ReadJoystick()
 		g.UpdatePlay()
 	case HighscoresState:
 		g.UpdateHighscores()
@@ -275,6 +296,9 @@ func main() {
 	log.SetOutput(f)
 
 	g := NewGame()
+
+	js, _ := joystick.Open(0)
+	g.js = js
 
 	if _, err := os.Stat(highscoreFilename); err == nil {
 		g.loadHighscores()
