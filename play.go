@@ -47,6 +47,9 @@ const (
 	rwdLg  = 30
 	rwdUfo = 100
 
+	fragmentLifetime = fps
+	numFragments     = 4
+
 	alienStartx, alienStarty = 10, 7
 
 	numBarricades = 4
@@ -69,6 +72,12 @@ type AnimatedEntity struct {
 type RegEntity struct {
 	Entity
 	sprite string
+}
+
+type FragmentGroup struct {
+	RegEntity
+	life      int
+	positions [][2]int
 }
 
 type Bullet struct {
@@ -120,6 +129,8 @@ var (
 	rowsLg           = 1
 	aliensHorizontal = 1
 
+	fragments []*FragmentGroup
+
 	barricadePositions [][]int
 
 	lvl int
@@ -163,6 +174,12 @@ func (g *Game) DrawPlay() {
 	livesx = g.w - livesRightOffset - len(livesStr)
 	livesy = scorey
 	tbprint(livesx, livesy, fgPlayText, bgPlayText, livesStr)
+
+	for i := range fragments {
+		for _, pos := range fragments[i].positions {
+			tbprint(pos[0], pos[1], fragments[i].fg, fragments[i].bg, fragments[i].sprite)
+		}
+	}
 }
 
 func (g *Game) PlayerPositions() [][]int {
@@ -306,6 +323,7 @@ func (g *Game) wipePlay() {
 	}
 
 	player = nil
+	fragments = make([]*FragmentGroup, 0)
 	aliens = make([]*Alien, aliensHorizontal*numRows)
 	alienBullets = make([]*Bullet, int(aliensHorizontal*numRows/10))
 	alienSpriteIndex = 0
@@ -437,6 +455,10 @@ func newUfo() *RegEntity {
 	return &RegEntity{Entity{0 - ufoSpriteWidth, 4, fgUfo, bgUfo}, ufoSprite}
 }
 
+func (g *Game) explode(x, y int) {
+	fragments = append(fragments, &FragmentGroup{RegEntity{Entity{x, y, fgBullet, bgBullet}, "*"}, 0, make([][2]int, numFragments)})
+}
+
 func (g *Game) UpdatePlay() {
 	playerPos := g.PlayerPositions()
 	for b := range alienBullets {
@@ -475,6 +497,7 @@ func (g *Game) UpdatePlay() {
 			x, y := player.bullet.x, player.bullet.y
 			if screen[x][y] != nonIndex {
 				player.bullet = nil
+				g.explode(x, y)
 				if screen[x][y] == ufoIndex {
 					player.score += ufoReward
 					ufo = nil
@@ -553,6 +576,30 @@ func (g *Game) UpdatePlay() {
 		case downFlag:
 			alienv = downMove
 		}
+	}
+
+	// update any fragments
+	fragmentsCopy := make([]*FragmentGroup, 0)
+	for i := range fragments {
+		if fragments[i].life > fragmentLifetime {
+			continue
+		}
+
+		if fragments[i].life%3 == 0 {
+			for j := 0; j < numFragments; j++ {
+				x := rand.Intn(8) + fragments[i].x - 3
+				y := rand.Intn(4) + fragments[i].y - 2
+				fragments[i].positions[j][0] = x
+				fragments[i].positions[j][1] = y
+			}
+		}
+
+		fragments[i].life++
+		fragmentsCopy = append(fragmentsCopy, fragments[i])
+	}
+	fragments = fragmentsCopy
+	if len(fragments) > 0 {
+		fragments = fragments[:len(fragments)]
 	}
 
 	select {

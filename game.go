@@ -190,9 +190,23 @@ func (g *Game) loadHighscores() {
 		log.Fatalln(err)
 	}
 	lines := strings.Split(string(data), "\n")
+	if len(lines) == 0 {
+		return
+	}
 	for _, l := range lines {
 		parts := strings.Split(l, highscoreSeparator)
+		if len(parts) != 2 {
+			log.Println("highscores file has been corrupted - please correct/delete it")
+			continue
+		} else if len(parts[0]) < 3 || len(parts[0]) > 10 {
+			log.Println("highscore file has been corrupted (name too long/short) - please correct/delete it")
+			continue
+		}
 		if i, err := strconv.Atoi(parts[1]); err == nil {
+			if i < 0 {
+				log.Println("negative highscore found - data corrupted - please correct/delete the hs file")
+				continue
+			}
 			g.highscores = append(g.highscores, &Highscore{i, parts[0]})
 		} else {
 			log.Fatalln(err)
@@ -200,6 +214,44 @@ func (g *Game) loadHighscores() {
 	}
 
 	sort.Sort(sort.Reverse(ByScore(g.highscores)))
+	if len(g.highscores) > 5 {
+		g.highscores = g.highscores[:5]
+	}
+}
+
+func loadHighscoresData(data []byte) error {
+	highscores := make([]*Highscore, 0)
+	lines := strings.Split(string(data), "\n")
+	if len(lines) == 0 {
+		return fmt.Errorf("no highscore data in file")
+	}
+	for _, l := range lines {
+		parts := strings.Split(l, highscoreSeparator)
+		if len(parts) != 2 {
+			return fmt.Errorf("corrupted highscore data")
+		}
+		if i, err := strconv.Atoi(parts[1]); err == nil {
+			if i < 0 {
+				return fmt.Errorf("negative highscore - data corrupted")
+			}
+			highscores = append(highscores, &Highscore{i, parts[0]})
+		} else {
+			return err
+		}
+	}
+
+	sort.Sort(sort.Reverse(ByScore(highscores)))
+	if len(highscores) > 5 {
+		highscores = highscores[:5]
+	}
+	return nil
+}
+
+func Fuzz(data []byte) int {
+	if err := loadHighscoresData(data); err != nil {
+		return 0
+	}
+	return 1
 }
 
 func (g *Game) checkSize() bool {

@@ -52,11 +52,12 @@ xxoxOxoxx`},
 		AttributedText{fgHowto, bgHowto, `/`},
 		AttributedText{fgHowtoControl, bgHowto, `Right`},
 		AttributedText{fgHowto, bgHowto, ` Arrow to move.
-
 `},
 		AttributedText{fgHowtoControl, bgHowto, `Space`},
 		AttributedText{fgHowto, bgHowto, ` to fire.
-
+Press `},
+		AttributedText{fgHowtoControl, bgHowto, `q `},
+		AttributedText{fgHowto, bgHowto, `to quit.
 
 Press `},
 		AttributedText{fgHowtoControl, bgHowto, `ESC`},
