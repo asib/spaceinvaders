@@ -4,6 +4,17 @@ Terminal Space Invaders game written in Go.
 ![Screenshot 1](screen_1.png)
 ![Screenshot 2](screen_2.png)
 
+#### Joystick bug
+
+I've just found out that Ubuntu recognises my Microsoft keyboard as both a keyboard and a joystick,
+meaning it creates `/dev/input/js0` despite the fact that there is no joystick connected.
+The result is that the data read from this input can cause unwanted key press events in the game,
+making it unplayable.
+
+The quickfix is to simply `sudo rm /dev/input/js0`.
+
+Alternatively you can establish a rule for `js0`.
+
 #### Installation
 ```sh
 go get -u github.com/asib/spaceinvaders
