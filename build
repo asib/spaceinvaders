@@ -1,0 +1,11 @@
+. crosscompile.bash
+
+go-darwin-386 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_darwin_386" && tar -czf "$_.tar.gz" $_
+go-darwin-amd64 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_darwin_amd64" && tar -czf "$_.tar.gz" $_
+go-freebsd-386 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_freebsd_386" && tar -czf "$_.tar.gz" $_
+go-freebsd-amd64 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_freebsd_amd64" && tar -czf "$_.tar.gz" $_
+go-linux-386 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_linux_386" && tar -czf "$_.tar.gz" $_
+go-linux-amd64 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_linux_amd64" && tar -czf "$_.tar.gz" $_
+go-linux-arm build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_linux_arm" && tar -czf "$_.tar.gz" $_
+go-windows-386 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_windows_386.exe" && tar -czf "$_.tar.gz" $_
+go-windows-amd64 build -o "/Users/jacobfenton/Desktop/spaceinvaders_bin/spaceinvaders_windows_amd64.exe" && tar -czf "$_.tar.gz" $_
