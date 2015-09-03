@@ -36,9 +36,20 @@
 
 <p>Terminal Space Invaders game written in Go.</p>
 
-<p><img src="https://raw.githubusercontent.com/asib/spaceinvaders/master/screen_1.png" alt="Screenshot 1"></p>
+<p><img src="https://raw.githubusercontent.com/asib/spaceinvaders/master/screen_1.png" alt="Screenshot 1">
+<img src="https://raw.githubusercontent.com/asib/spaceinvaders/master/screen_2.png" alt="Screenshot 2"></p>
 
-<p><img src="https://raw.githubusercontent.com/asib/spaceinvaders/master/screen_2.png" alt="Screenshot 2"></p>
+<h4>
+<a id="joystick-bug" class="anchor" href="#joystick-bug" aria-hidden="true"><span class="octicon octicon-link"></span></a>Joystick bug</h4>
+
+<p>I've just found out that Ubuntu recognises my Microsoft keyboard as both a keyboard and a joystick,
+meaning it creates <code>/dev/input/js0</code> despite the fact that there is no joystick connected.
+The result is that the data read from this input can cause unwanted key press events in the game,
+making it unplayable.</p>
+
+<p>The quickfix is to simply <code>sudo rm /dev/input/js0</code>.</p>
+
+<p>Alternatively you can establish a rule for <code>js0</code>.</p>
 
 <h4>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h4>
